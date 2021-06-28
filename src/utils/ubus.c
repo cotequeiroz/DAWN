@@ -1334,15 +1334,19 @@ int uci_send_via_network()
     blobmsg_add_u32(&b, "vht_support", dawn_metric.vht_support);
     blobmsg_add_u32(&b, "no_ht_support", dawn_metric.no_ht_support);
     blobmsg_add_u32(&b, "no_vht_support", dawn_metric.no_vht_support);
-    blobmsg_add_u32(&b, "rssi", dawn_metric.rssi);
-    blobmsg_add_u32(&b, "low_rssi", dawn_metric.low_rssi);
+    blobmsg_add_u32(&b, "rssi_2g", dawn_metric.rssi_2g);
+    blobmsg_add_u32(&b, "rssi_5g", dawn_metric.rssi_5g);
+    blobmsg_add_u32(&b, "low_rssi_2g", dawn_metric.low_rssi_2g);
+    blobmsg_add_u32(&b, "low_rssi_5g", dawn_metric.low_rssi_5g);
     blobmsg_add_u32(&b, "freq", dawn_metric.freq);
     blobmsg_add_u32(&b, "chan_util", dawn_metric.chan_util);
 
 
     blobmsg_add_u32(&b, "max_chan_util", dawn_metric.max_chan_util);
-    blobmsg_add_u32(&b, "rssi_val", dawn_metric.rssi_val);
-    blobmsg_add_u32(&b, "low_rssi_val", dawn_metric.low_rssi_val);
+    blobmsg_add_u32(&b, "rssi_2g_val", dawn_metric.rssi_2g_val);
+    blobmsg_add_u32(&b, "rssi_5g_val", dawn_metric.rssi_5g_val);
+    blobmsg_add_u32(&b, "low_rssi_2g_val", dawn_metric.low_rssi_2g_val);
+    blobmsg_add_u32(&b, "low_rssi_5g_val", dawn_metric.low_rssi_5g_val);
     blobmsg_add_u32(&b, "chan_util_val", dawn_metric.chan_util_val);
     blobmsg_add_u32(&b, "max_chan_util_val", dawn_metric.max_chan_util_val);
     blobmsg_add_u32(&b, "min_probe_count", dawn_metric.min_probe_count);

@@ -430,13 +430,17 @@ int eval_probe_metric(struct probe_entry_s* probe_entry, ap* ap_entry) {
         score += ap_entry->ap_weight;
     }
 
-    score += (probe_entry->freq > 5000) ? dawn_metric.freq : 0;
-
     // TODO: Should RCPI be used here as well?
     // TODO: Should this be more scaled?  Should -63dB on current and -77dB on other both score 0 if low / high are -80db and -60dB?
     // TODO: That then lets device capabilites dominate score - making them more important than RSSI difference of 14dB.
-    score += (probe_entry->signal >= dawn_metric.rssi_val) ? dawn_metric.rssi : 0;
-    score += (probe_entry->signal <= dawn_metric.low_rssi_val) ? dawn_metric.low_rssi : 0;
+    if (probe_entry->freq > 5000) {
+        score += dawn_metric.freq;
+        score += probe_entry->signal >= dawn_metric.rssi_5g_val ? dawn_metric.rssi_5g : 0;
+        score += probe_entry->signal <= dawn_metric.low_rssi_5g_val ? dawn_metric.low_rssi_5g : 0;
+    } else {
+        score += probe_entry->signal >= dawn_metric.rssi_2g_val ? dawn_metric.rssi_2g : 0;
+        score += probe_entry->signal <= dawn_metric.low_rssi_2g_val ? dawn_metric.low_rssi_2g : 0;
+    }
 
     // TODO: This magic value never checked by caller.  What does it achieve?
     if (score < 0)

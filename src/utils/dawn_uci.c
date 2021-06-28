@@ -84,6 +84,7 @@ struct probe_metric_s uci_get_dawn_metric() {
     uci_foreach_element(&uci_pkg->sections, e)
     {
         struct uci_section *s = uci_to_section(e);
+        const char *str;
 
         if (strcmp(s->type, "metric") == 0) {
             ret.ap_weight = uci_lookup_option_int(uci_ctx, s, "ap_weight");
@@ -92,16 +93,33 @@ struct probe_metric_s uci_get_dawn_metric() {
             ret.vht_support = uci_lookup_option_int(uci_ctx, s, "vht_support");
             ret.no_ht_support = uci_lookup_option_int(uci_ctx, s, "no_ht_support");
             ret.no_vht_support = uci_lookup_option_int(uci_ctx, s, "no_vht_support");
-            ret.rssi = uci_lookup_option_int(uci_ctx, s, "rssi");
+            ret.rssi_2g = ret.rssi_5g = uci_lookup_option_int(uci_ctx, s, "rssi");
+            if ((str = uci_lookup_option_string(uci_ctx, s, "rssi_2g")))
+                ret.rssi_2g = atoi(str);
+            if ((str = uci_lookup_option_string(uci_ctx, s, "rssi_5g")))
+                ret.rssi_5g = atoi(str);
             ret.freq = uci_lookup_option_int(uci_ctx, s, "freq");
-            ret.rssi_val = uci_lookup_option_int(uci_ctx, s, "rssi_val");
+            ret.rssi_2g_val = ret.rssi_5g_val = uci_lookup_option_int(uci_ctx, s, "rssi_val");
+            if ((str = uci_lookup_option_string(uci_ctx, s, "rssi_2g_val")))
+                ret.rssi_2g_val = atoi(str);
+            if ((str = uci_lookup_option_string(uci_ctx, s, "rssi_5g_val")))
+                ret.rssi_5g_val = atoi(str);
             ret.chan_util = uci_lookup_option_int(uci_ctx, s, "chan_util");
             ret.max_chan_util = uci_lookup_option_int(uci_ctx, s, "max_chan_util");
             ret.chan_util_val = uci_lookup_option_int(uci_ctx, s, "chan_util_val");
             ret.max_chan_util_val = uci_lookup_option_int(uci_ctx, s, "max_chan_util_val");
             ret.min_probe_count = uci_lookup_option_int(uci_ctx, s, "min_probe_count");
-            ret.low_rssi = uci_lookup_option_int(uci_ctx, s, "low_rssi");
-            ret.low_rssi_val = uci_lookup_option_int(uci_ctx, s, "low_rssi_val");
+            ret.low_rssi_2g = ret.low_rssi_5g = uci_lookup_option_int(uci_ctx, s, "low_rssi");
+            if ((str = uci_lookup_option_string(uci_ctx, s, "low_rssi_2g")))
+                ret.low_rssi_2g = atoi(str);
+            if ((str = uci_lookup_option_string(uci_ctx, s, "low_rssi_5g")))
+                ret.low_rssi_5g = atoi(str);
+            ret.low_rssi_2g_val = ret.low_rssi_5g_val =
+                                  uci_lookup_option_int(uci_ctx, s, "low_rssi_val");
+            if ((str = uci_lookup_option_string(uci_ctx, s, "low_rssi_2g_val")))
+                ret.low_rssi_2g_val = atoi(str);
+            if ((str = uci_lookup_option_string(uci_ctx, s, "low_rssi_5g_val")))
+                ret.low_rssi_5g_val = atoi(str);
             ret.bandwidth_threshold = uci_lookup_option_int(uci_ctx, s, "bandwidth_threshold");
             ret.use_station_count = uci_lookup_option_int(uci_ctx, s, "use_station_count");
             ret.eval_probe_req = uci_lookup_option_int(uci_ctx, s, "eval_probe_req");
