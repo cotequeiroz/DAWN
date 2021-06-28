@@ -577,13 +577,17 @@ enum {
     UCI_VHT_SUPPORT,
     UCI_NO_HT_SUPPORT,
     UCI_NO_VHT_SUPPORT,
-    UCI_RSSI,
-    UCI_LOW_RSSI,
+    UCI_RSSI_2G,
+    UCI_RSSI_5G,
+    UCI_LOW_RSSI_2G,
+    UCI_LOW_RSSI_5G,
     UCI_FREQ,
     UCI_CHAN_UTIL,
     UCI_MAX_CHAN_UTIL,
-    UCI_RSSI_VAL,
-    UCI_LOW_RSSI_VAL,
+    UCI_RSSI_2G_VAL,
+    UCI_RSSI_5G_VAL,
+    UCI_LOW_RSSI_2G_VAL,
+    UCI_LOW_RSSI_5G_VAL,
     UCI_CHAN_UTIL_VAL,
     UCI_MAX_CHAN_UTIL_VAL,
     UCI_MIN_PROBE_COUNT,
@@ -630,13 +634,17 @@ static const struct blobmsg_policy uci_metric_policy[__UCI_METIC_MAX] = {
         [UCI_VHT_SUPPORT] = {.name = "vht_support", .type = BLOBMSG_TYPE_INT32},
         [UCI_NO_HT_SUPPORT] = {.name = "no_ht_support", .type = BLOBMSG_TYPE_INT32},
         [UCI_NO_VHT_SUPPORT] = {.name = "no_vht_support", .type = BLOBMSG_TYPE_INT32},
-        [UCI_RSSI] = {.name = "rssi", .type = BLOBMSG_TYPE_INT32},
-        [UCI_LOW_RSSI] = {.name = "low_rssi", .type = BLOBMSG_TYPE_INT32},
+        [UCI_RSSI_2G] = {.name = "rssi_2g", .type = BLOBMSG_TYPE_INT32},
+        [UCI_RSSI_5G] = {.name = "rssi_5g", .type = BLOBMSG_TYPE_INT32},
+        [UCI_LOW_RSSI_2G] = {.name = "low_rssi_2g", .type = BLOBMSG_TYPE_INT32},
+        [UCI_LOW_RSSI_5G] = {.name = "low_rssi_5g", .type = BLOBMSG_TYPE_INT32},
         [UCI_FREQ] = {.name = "freq", .type = BLOBMSG_TYPE_INT32},
         [UCI_CHAN_UTIL] = {.name = "chan_util", .type = BLOBMSG_TYPE_INT32},
         [UCI_MAX_CHAN_UTIL] = {.name = "max_chan_util", .type = BLOBMSG_TYPE_INT32},
-        [UCI_RSSI_VAL] = {.name = "rssi_val", .type = BLOBMSG_TYPE_INT32},
-        [UCI_LOW_RSSI_VAL] = {.name = "low_rssi_val", .type = BLOBMSG_TYPE_INT32},
+        [UCI_RSSI_2G_VAL] = {.name = "rssi_2g_val", .type = BLOBMSG_TYPE_INT32},
+        [UCI_RSSI_5G_VAL] = {.name = "rssi_5g_val", .type = BLOBMSG_TYPE_INT32},
+        [UCI_LOW_RSSI_2G_VAL] = {.name = "low_rssi_2g_val", .type = BLOBMSG_TYPE_INT32},
+        [UCI_LOW_RSSI_5G_VAL] = {.name = "low_rssi_5g_val", .type = BLOBMSG_TYPE_INT32},
         [UCI_CHAN_UTIL_VAL] = {.name = "chan_util_val", .type = BLOBMSG_TYPE_INT32},
         [UCI_MAX_CHAN_UTIL_VAL] = {.name = "max_chan_util_val", .type = BLOBMSG_TYPE_INT32},
         [UCI_MIN_PROBE_COUNT] = {.name = "min_probe_count", .type = BLOBMSG_TYPE_INT32},
@@ -693,10 +701,16 @@ static int handle_uci_config(struct blob_attr* msg) {
     sprintf(cmd_buffer, "dawn.@metric[0].no_vht_support=%d", blobmsg_get_u32(tb_metric[UCI_NO_VHT_SUPPORT]));
     uci_set_network(cmd_buffer);
 
-    sprintf(cmd_buffer, "dawn.@metric[0].rssi=%d", blobmsg_get_u32(tb_metric[UCI_RSSI]));
+    sprintf(cmd_buffer, "dawn.@metric[0].rssi_2g=%d", blobmsg_get_u32(tb_metric[UCI_RSSI_2G]));
     uci_set_network(cmd_buffer);
 
-    sprintf(cmd_buffer, "dawn.@metric[0].low_rssi=%d", blobmsg_get_u32(tb_metric[UCI_LOW_RSSI]));
+    sprintf(cmd_buffer, "dawn.@metric[0].rssi_5g=%d", blobmsg_get_u32(tb_metric[UCI_RSSI_5G]));
+    uci_set_network(cmd_buffer);
+
+    sprintf(cmd_buffer, "dawn.@metric[0].low_rssi_2g=%d", blobmsg_get_u32(tb_metric[UCI_LOW_RSSI_2G]));
+    uci_set_network(cmd_buffer);
+
+    sprintf(cmd_buffer, "dawn.@metric[0].low_rssi_5g=%d", blobmsg_get_u32(tb_metric[UCI_LOW_RSSI_5G]));
     uci_set_network(cmd_buffer);
 
     sprintf(cmd_buffer, "dawn.@metric[0].freq=%d", blobmsg_get_u32(tb_metric[UCI_FREQ]));
@@ -705,10 +719,16 @@ static int handle_uci_config(struct blob_attr* msg) {
     sprintf(cmd_buffer, "dawn.@metric[0].chan_util=%d", blobmsg_get_u32(tb_metric[UCI_CHAN_UTIL]));
     uci_set_network(cmd_buffer);
 
-    sprintf(cmd_buffer, "dawn.@metric[0].rssi_val=%d", blobmsg_get_u32(tb_metric[UCI_RSSI_VAL]));
+    sprintf(cmd_buffer, "dawn.@metric[0].rssi_2g_val=%d", blobmsg_get_u32(tb_metric[UCI_RSSI_2G_VAL]));
     uci_set_network(cmd_buffer);
 
-    sprintf(cmd_buffer, "dawn.@metric[0].low_rssi_val=%d", blobmsg_get_u32(tb_metric[UCI_LOW_RSSI_VAL]));
+    sprintf(cmd_buffer, "dawn.@metric[0].rssi_5g_val=%d", blobmsg_get_u32(tb_metric[UCI_RSSI_5G_VAL]));
+    uci_set_network(cmd_buffer);
+
+    sprintf(cmd_buffer, "dawn.@metric[0].low_rssi_2g_val=%d", blobmsg_get_u32(tb_metric[UCI_LOW_RSSI_2G_VAL]));
+    uci_set_network(cmd_buffer);
+
+    sprintf(cmd_buffer, "dawn.@metric[0].low_rssi_5g_val=%d", blobmsg_get_u32(tb_metric[UCI_LOW_RSSI_5G_VAL]));
     uci_set_network(cmd_buffer);
 
     sprintf(cmd_buffer, "dawn.@metric[0].chan_util_val=%d", blobmsg_get_u32(tb_metric[UCI_CHAN_UTIL_VAL]));

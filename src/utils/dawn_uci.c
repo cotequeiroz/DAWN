@@ -77,6 +77,13 @@ struct time_config_s uci_get_time_config() {
     return ret;
 }
 
+static void set_if_present(int *ret, struct uci_setion s, const char* option) {
+    const char *str;
+
+    if ((str = uci_lookup_option_string(uci_ctx, s, option)))
+        *ret = atoi(str);
+}
+
 struct probe_metric_s uci_get_dawn_metric() {
     struct probe_metric_s ret;
 
@@ -92,16 +99,25 @@ struct probe_metric_s uci_get_dawn_metric() {
             ret.vht_support = uci_lookup_option_int(uci_ctx, s, "vht_support");
             ret.no_ht_support = uci_lookup_option_int(uci_ctx, s, "no_ht_support");
             ret.no_vht_support = uci_lookup_option_int(uci_ctx, s, "no_vht_support");
-            ret.rssi = uci_lookup_option_int(uci_ctx, s, "rssi");
+            ret.rssi_2g = ret.rssi_5g = uci_lookup_option_int(uci_ctx, s, "rssi");
+            set_if_present(&ret.rssi_2g, s, "rssi_2g");
+            set_if_present(&ret.rssi_5g, s, "rssi_5g");
             ret.freq = uci_lookup_option_int(uci_ctx, s, "freq");
-            ret.rssi_val = uci_lookup_option_int(uci_ctx, s, "rssi_val");
+            ret.rssi_2g_val = ret.rssi_5g_val = uci_lookup_option_int(uci_ctx, s, "rssi_val");
+            set_if_present(&ret.rssi_2g_val, s, "rssi_2g_val");
+            set_if_present(&ret.rssi_5g_val, s, "rssi_5g_val");
             ret.chan_util = uci_lookup_option_int(uci_ctx, s, "chan_util");
             ret.max_chan_util = uci_lookup_option_int(uci_ctx, s, "max_chan_util");
             ret.chan_util_val = uci_lookup_option_int(uci_ctx, s, "chan_util_val");
             ret.max_chan_util_val = uci_lookup_option_int(uci_ctx, s, "max_chan_util_val");
             ret.min_probe_count = uci_lookup_option_int(uci_ctx, s, "min_probe_count");
-            ret.low_rssi = uci_lookup_option_int(uci_ctx, s, "low_rssi");
-            ret.low_rssi_val = uci_lookup_option_int(uci_ctx, s, "low_rssi_val");
+            ret.low_rssi_2g = ret.low_rssi_5g = uci_lookup_option_int(uci_ctx, s, "low_rssi");
+            set_if_present(&ret.low_rssi_2g, s, "low_rssi_2g");
+            set_if_present(&ret.low_rssi_5g, s, "low_rssi_5g");
+            ret.low_rssi_2g_val = ret.low_rssi_5g_val =
+                                  uci_lookup_option_int(uci_ctx, s, "low_rssi_val");
+            set_if_present(&ret.low_rssi_2g_val, s, "low_rssi_2g_val");
+            set_if_present(&ret.low_rssi_5g_val, s, "low_rssi_5g_val");
             ret.bandwidth_threshold = uci_lookup_option_int(uci_ctx, s, "bandwidth_threshold");
             ret.use_station_count = uci_lookup_option_int(uci_ctx, s, "use_station_count");
             ret.eval_probe_req = uci_lookup_option_int(uci_ctx, s, "eval_probe_req");
@@ -242,6 +258,10 @@ int uci_init() {
 }
 
 int uci_clear() {
+    if (dawn_metric) {
+        free_neighbor_mac_list(dawn_metric.neighbors_2g);
+        free_neighbor_mac_list(dawn_metric.neighbors_5g);
+    }
     if (uci_pkg != NULL) {
         uci_unload(uci_ctx, uci_pkg);
         dawn_unregmem(uci_pkg);
