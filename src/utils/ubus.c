@@ -334,6 +334,14 @@ int parse_to_beacon_rep(struct blob_attr *msg) {
 
     const uint8_t *ssid = (const uint8_t*)blobmsg_get_string(tb[BEACON_REP_SSID]);
     ap *ap_entry_rep = ap_array_get_ap(msg_bssid, ssid);
+    printf("parse_to_beacon_rep: calling ap_array_get_ap(msg_bssid=");
+    printf(MACSTRLOWER, MAC2STR(msg_bssid.u8));
+    printf(", ssid=%s) = ", ssid);
+    if (ap_entry_rep)
+        printf(MACSTRLOWER, MAC2STR(ap_entry_rep->bssid_addr.u8));
+    else
+        printf("NULL");
+    printf("\n");
 
     // no client from network!!
     if (ap_entry_rep == NULL) {
@@ -1404,7 +1412,15 @@ int build_hearing_map_sort_client(struct blob_buf *b) {
             ssid_list = blobmsg_open_table(b, (char*)m->ssid);
             probe_entry* i = probe_set;
             while (i != NULL) {
-                ap *ap_entry_i = ap_array_get_ap(i->bssid_addr, i->ssid);
+                ap *ap_entry_i = ap_array_get_ap(i->bssid_addr, m->ssid);
+                    printf("build_hearing_map_sort_client: calling ap_array_get_ap(i->bssid_addr=");
+                printf(MACSTRLOWER, MAC2STR(i->bssid_addr.u8));
+                    printf(", m->ssid=%s)=", m->ssid);
+                if (ap_entry_i)
+                    printf(MACSTRLOWER, MAC2STR(ap_entry_i->bssid_addr.u8));
+                else
+                    printf("NULL");
+                printf("\n");
 
                 if (ap_entry_i == NULL) {
                     i = i->next_probe;
@@ -1423,7 +1439,15 @@ int build_hearing_map_sort_client(struct blob_buf *b) {
                 k != NULL && mac_is_equal_bb(k->client_addr, i->client_addr);
                 k = k->next_probe) {
 
-                    ap *ap_k = ap_array_get_ap(k->bssid_addr, k->ssid);
+                    ap *ap_k = ap_array_get_ap(k->bssid_addr, m->ssid);
+                        printf("build_hearing_map_sort_client: calling ap_array_get_ap(k->bssid_addr=");
+                    printf(MACSTRLOWER, MAC2STR(k->bssid_addr.u8));
+                        printf(", m->ssid=%s)=", k->ssid);
+                    if (ap_k)
+                        printf(MACSTRLOWER, MAC2STR(ap_k->bssid_addr.u8));
+                    else
+                        printf("NULL");
+                    printf("\n");
 
                     if (ap_k == NULL || strcmp((char*)ap_k->ssid, (char*)m->ssid) != 0) {
                         continue;
