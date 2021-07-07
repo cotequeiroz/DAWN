@@ -77,15 +77,75 @@ struct time_config_s uci_get_time_config() {
     return ret;
 }
 
-static void set_if_present(int *ret, struct uci_setion s, const char* option) {
+static void set_if_present(int *ret, struct uci_section *s, const char* option) {
     const char *str;
 
     if ((str = uci_lookup_option_string(uci_ctx, s, option)))
         *ret = atoi(str);
 }
 
+static struct mac_entry_s *add_neighbor_mac(struct mac_entry_s *cur, const char* mac) {
+    struct mac_entry_s *ret;
+
+    if (!(ret = dawn_malloc(sizeof (struct mac_entry_s)))) {
+        fprintf(stderr, "Warning: Failed to create neighbor entry for '%s'\n", mac);
+        return cur;
+    }
+    memset(ret, 0, sizeof (struct mac_entry_s));
+    if (hwaddr_aton(mac, ret->mac.u8) != 0) {
+        fprintf(stderr, "Warning: Failed to parse MAC from '%s'\n", mac);
+        dawn_free(ret);
+        return cur;
+    }
+    if (cur)
+        cur->next_mac = ret;
+    return ret;
+}
+
+static void free_neighbor_mac_list(struct mac_entry_s *list) {
+    struct mac_entry_s *ptr = list;
+    while (list) {
+        ptr = list;
+        list = list->next_mac;
+        dawn_free(ptr);
+    }
+}
+
+static struct mac_entry_s* uci_lookup_mac_list(struct uci_context *uci, struct uci_section *s,
+                                               const char *name) {
+    struct uci_option *o;
+    struct uci_element *e;
+    struct mac_entry_s *ret = NULL;
+    struct mac_entry_s *cur = NULL;
+    char *str;
+
+    if (!(o = uci_lookup_option(uci, s, name)))
+        return NULL;
+
+    switch (o->type) {
+    case UCI_TYPE_LIST:
+        uci_foreach_element(&o->v.list, e) {
+            cur = add_neighbor_mac(cur, e->name);
+            if (!ret)
+                ret = cur;
+        }
+        break;
+    case UCI_TYPE_STRING:
+        if (!(str = strdup (o->v.string)))
+            return NULL;
+        for (char *mac = strtok(str, " "); mac; mac = strtok(NULL, " ")) {
+            cur = add_neighbor_mac(cur, mac);
+            if (!ret)
+                ret = cur;
+        }
+        free(str);
+    }
+    return ret;
+}
+
+
 struct probe_metric_s uci_get_dawn_metric() {
-    struct probe_metric_s ret;
+    struct probe_metric_s ret = { 0 };
 
     struct uci_element *e;
     uci_foreach_element(&uci_pkg->sections, e)
@@ -134,6 +194,9 @@ struct probe_metric_s uci_get_dawn_metric() {
             ret.duration = uci_lookup_option_int(uci_ctx, s, "duration");
             ret.mode = uci_lookup_option_int(uci_ctx, s, "mode");
             ret.scan_channel = uci_lookup_option_int(uci_ctx, s, "scan_channel");
+            ret.max_neighbors = uci_lookup_option_int(uci_ctx, s, "max_neighbors");
+            ret.neighbors_2g = uci_lookup_mac_list(uci_ctx, s, "neighbors_2g");
+            ret.neighbors_5g = uci_lookup_mac_list(uci_ctx, s, "neighbors_5g");
             return ret;
         }
     }
@@ -258,10 +321,9 @@ int uci_init() {
 }
 
 int uci_clear() {
-    if (dawn_metric) {
-        free_neighbor_mac_list(dawn_metric.neighbors_2g);
-        free_neighbor_mac_list(dawn_metric.neighbors_5g);
-    }
+    free_neighbor_mac_list(dawn_metric.neighbors_2g);
+    free_neighbor_mac_list(dawn_metric.neighbors_5g);
+
     if (uci_pkg != NULL) {
         uci_unload(uci_ctx, uci_pkg);
         dawn_unregmem(uci_pkg);

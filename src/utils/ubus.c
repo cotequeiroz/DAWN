@@ -106,9 +106,6 @@ struct hostapd_sock_entry {
     int chan_util_average; //TODO: Never evaluated?
 
     // add neighbor report string
-    /*
-    [Elemen ID|1][LENGTH|1][BSSID|6][BSSID INFORMATION|4][Operating Class|1][Channel Number|1][PHY Type|1][Operational Subelements]
-    */
     char neighbor_report[NEIGHBOR_REPORT_LEN];
 
     struct ubus_subscriber subscriber;
@@ -1565,37 +1562,71 @@ int build_network_overview(struct blob_buf *b) {
 }
 
 
+static void blobmsg_add_nr(struct blob_buf *b_local, ap *i) {
+    void* nr_entry = blobmsg_open_array(b_local, NULL);
+    char mac_buf[20];
+
+    sprintf(mac_buf, MACSTRLOWER, MAC2STR(i->bssid_addr.u8));
+    blobmsg_add_string(b_local, NULL, mac_buf);
+
+    blobmsg_add_string(b_local, NULL, (char *) i->ssid);
+    blobmsg_add_string(b_local, NULL, i->neighbor_report);
+    blobmsg_close_array(b_local, nr_entry);
+}
+
+static int mac_is_in_entry_list(const struct dawn_mac mac, const struct mac_entry_s *list) {
+    printf("Entering mac_is_in_entry_list...");
+    for (const struct mac_entry_s *i = list; i; i = i->next_mac)
+        if (mac_is_equal_bb(i->mac, mac)) {
+	    printf("Found!\n");
+            return 1;
+	}
+    printf("Not Found!\n");
+    return 0;
+}
+
 // TODO: Does all APs constitute neighbor report?  How about using list of AP connected
 // clients can also see (from probe_set) to give more (physically) local set?
 int ap_get_nr(struct blob_buf *b_local, struct dawn_mac own_bssid_addr, const char *ssid) {
 
     pthread_mutex_lock(&ap_array_mutex);
-    ap *i;
+    ap *i, *own_ap;
+    struct mac_entry_s *neighbor_list, *n;
+    int ret = -1;
 
     void* nbs = blobmsg_open_array(b_local, "list");
 
+    printf("----- PREPARING NEIGHBOR REPORT -----\n");
+    own_ap = ap_array_get_ap(own_bssid_addr, (uint8_t*)ssid);
+    if (!own_ap)
+        goto out;
+    neighbor_list = own_ap->neighbor_report[NR_CHANNEL] > 14 ?
+                    dawn_metric.neighbors_5g : dawn_metric.neighbors_2g;
+
+    printf("----- STARTING PREFERRED LOOP -----\n");
+    for (n = neighbor_list; n; n = n->next_mac) {
+        if ((i = ap_array_get_ap(n->mac, (uint8_t*)ssid))) {
+	    printf("Adding preferred " MACSTR "\n", MAC2STR(n->mac.u8));
+            blobmsg_add_nr(b_local, i);
+	}
+    }
+
+    // TODO: There has to be a better way than this.
+    printf("----- STARTING REGULAR LOOP -----\n");
     for (i = ap_set; i != NULL; i = i->next_ap) {
-        if (mac_is_equal_bb(own_bssid_addr, i->bssid_addr) ||
-	    strncmp((char *)i->ssid, ssid, SSID_MAX_LEN)) {
-            continue;
+        if (i != own_ap && !strncmp((char *)i->ssid, ssid, SSID_MAX_LEN) &&
+            !mac_is_in_entry_list(i->bssid_addr, neighbor_list))
+        {
+	    printf("Adding " MACSTR "\n", MAC2STR(n->mac.u8));
+            blobmsg_add_nr(b_local, i);
         }
-
-        void* nr_entry = blobmsg_open_array(b_local, NULL);
-
-        char mac_buf[20];
-        sprintf(mac_buf, MACSTRLOWER, MAC2STR(i->bssid_addr.u8));
-        blobmsg_add_string(b_local, NULL, mac_buf);
-
-        blobmsg_add_string(b_local, NULL, (char *) i->ssid);
-        blobmsg_add_string(b_local, NULL, i->neighbor_report);
-        blobmsg_close_array(b_local, nr_entry);
-
     }
     blobmsg_close_array(b_local, nbs);
+    ret = 0;
 
+out:
     pthread_mutex_unlock(&ap_array_mutex);
-
-    return 0;
+    return ret;
 }
 
 void uloop_add_data_cbs() {
