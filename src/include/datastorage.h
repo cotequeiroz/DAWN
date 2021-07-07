@@ -81,6 +81,9 @@ struct probe_metric_s {
     int duration;
     int mode;
     int scan_channel;
+    int max_neighbors;
+    struct mac_entry_s* neighbors_2g;
+    struct mac_entry_s* neighbors_5g;
 };
 
 struct time_config_s {
