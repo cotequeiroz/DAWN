@@ -84,22 +84,21 @@ static void set_if_present(int *ret, struct uci_section *s, const char* option) 
         *ret = atoi(str);
 }
 
-static struct mac_entry_s *add_neighbor_mac(struct mac_entry_s *cur, const char* mac) {
-    struct mac_entry_s *ret;
+static struct mac_entry_s *insert_neighbor_mac(struct mac_entry_s *head, const char* mac) {
+    struct mac_entry_s *new;
 
-    if (!(ret = dawn_malloc(sizeof (struct mac_entry_s)))) {
+    if (!(new = dawn_malloc(sizeof (struct mac_entry_s)))) {
         fprintf(stderr, "Warning: Failed to create neighbor entry for '%s'\n", mac);
-        return cur;
+        return head;
     }
-    memset(ret, 0, sizeof (struct mac_entry_s));
-    if (hwaddr_aton(mac, ret->mac.u8) != 0) {
+    memset(new, 0, sizeof (struct mac_entry_s));
+    if (hwaddr_aton(mac, new->mac.u8) != 0) {
         fprintf(stderr, "Warning: Failed to parse MAC from '%s'\n", mac);
-        dawn_free(ret);
-        return cur;
+        dawn_free(new);
+        return head;
     }
-    if (cur)
-        cur->next_mac = ret;
-    return ret;
+    new->next_mac = head;
+    return new;
 }
 
 static void free_neighbor_mac_list(struct mac_entry_s *list) {
@@ -115,32 +114,28 @@ static struct mac_entry_s* uci_lookup_mac_list(struct uci_context *uci, struct u
                                                const char *name) {
     struct uci_option *o;
     struct uci_element *e;
-    struct mac_entry_s *ret = NULL;
-    struct mac_entry_s *cur = NULL;
+    struct mac_entry_s *head = NULL;
     char *str;
 
     if (!(o = uci_lookup_option(uci, s, name)))
         return NULL;
 
+    // hostapd inserts the new neigbor reports at the top of the list.
+    // Therefore, we must also do this backwares somewhere.  Let's do it
+    // here instead of when sending the list through ubus.
     switch (o->type) {
     case UCI_TYPE_LIST:
-        uci_foreach_element(&o->v.list, e) {
-            cur = add_neighbor_mac(cur, e->name);
-            if (!ret)
-                ret = cur;
-        }
+        uci_foreach_element(&o->v.list, e)
+            head = insert_neighbor_mac(head, e->name);
         break;
     case UCI_TYPE_STRING:
         if (!(str = strdup (o->v.string)))
             return NULL;
-        for (char *mac = strtok(str, " "); mac; mac = strtok(NULL, " ")) {
-            cur = add_neighbor_mac(cur, mac);
-            if (!ret)
-                ret = cur;
-        }
+        for (char *mac = strtok(str, " "); mac; mac = strtok(NULL, " "))
+            head = insert_neighbor_mac(head, mac);
         free(str);
     }
-    return ret;
+    return head;
 }
 
 

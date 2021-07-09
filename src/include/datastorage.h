@@ -181,6 +181,15 @@ typedef struct auth_entry_s assoc_entry;
 // ---------------- Defines ----------------
 
 #define NEIGHBOR_REPORT_LEN 200
+/* Neighbor report string elements
+ * [Elemen ID|1][LENGTH|1][BSSID|6][BSSID INFORMATION|4][Operating Class|1][Channel Number|1][PHY Type|1][Operational Subelements]
+ * first two bytes are not stored
+ */
+#define NR_BSSID         0
+#define NR_BSSID_INFO   12
+#define NR_OP_CLASS     20
+#define NR_CHANNEL      22
+#define NR_PHY          24
 
 // ---------------- Global variables ----------------
 extern struct auth_entry_s *denied_req_set;
