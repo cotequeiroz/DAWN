@@ -542,6 +542,12 @@ static struct kicking_nr *prune_kicking_nr_list(struct kicking_nr *nr_list, int 
     return nr_list;
 }
 
+static void print_nr(struct kicking_nr *n)
+{
+    for (; n; n = n->next)
+        printf(NR_MACSTR "=%03d ", NR_MAC2STR(n->nr), n->score);
+}
+
 static struct kicking_nr *insert_kicking_nr(struct kicking_nr *head, char *nr, int score, bool prune) {
     struct kicking_nr *new_entry, *pos;
 
@@ -562,6 +568,7 @@ static struct kicking_nr *insert_kicking_nr(struct kicking_nr *head, char *nr, i
         new_entry->next = head;
         head = new_entry;
     }
+    print_nr(head);
     return head;
 }
 
@@ -576,6 +583,8 @@ int better_ap_available(ap *kicking_ap, struct dawn_mac client_mac, struct kicki
 #endif
 
         own_score = eval_probe_metric(own_probe, kicking_ap);  //TODO: Should the -2 return be handled?
+        printf("====================================\n");
+        printf("Checking " MACSTR " - Own=%3d\n", MAC2STR(client_mac.u8), own_score);
     }
     // no entry for own ap - should never happen?
     else {
@@ -611,6 +620,7 @@ int better_ap_available(ap *kicking_ap, struct dawn_mac client_mac, struct kicki
         printf("Other ");
 #endif
         int score_to_compare = eval_probe_metric(i, candidate_ap);
+        printf(MACSTR ": %3d - own: %3d - ", MAC2STR(i->bssid_addr.u8), score_to_compare, own_score);
 
         // Find better score...
         if (score_to_compare > max_score + (kick ? 0 : dawn_metric.kicking_threshold)) {
@@ -621,6 +631,7 @@ int better_ap_available(ap *kicking_ap, struct dawn_mac client_mac, struct kicki
             }
 
             kick = 1;
+            printf("*BEST* ");
 
             // instead of returning we add the ap to the neighbor report list, pruning it first...
             *neighbor_report = insert_kicking_nr(*neighbor_report, candidate_ap->neighbor_report, score_to_compare, true);
@@ -640,22 +651,33 @@ int better_ap_available(ap *kicking_ap, struct dawn_mac client_mac, struct kicki
                 }
 
                 kick = 1;
+                printf("*BEST* ");
                 *neighbor_report = insert_kicking_nr(*neighbor_report, candidate_ap->neighbor_report,
                                                      score_to_compare, true);
             }
             else if (compare == 0 && kick) {
+                printf("added: ");
                 *neighbor_report = insert_kicking_nr(*neighbor_report, candidate_ap->neighbor_report,
                                                      score_to_compare, false);
             }
         }
         else if (score_to_compare >= max_score && kick) {
+            printf("added: ");
             *neighbor_report = insert_kicking_nr(*neighbor_report, candidate_ap->neighbor_report,
                                                  score_to_compare, false);
         }
 
+        printf("\n");
         i = i->next_probe;
     }
 
+    printf("====================================\n");
+    if (kick) {
+        printf("Sending " MACSTR " to " NR_MACSTR ": ", MAC2STR(client_mac.u8), NR_MAC2STR((*neighbor_report)->nr));
+        print_nr(*neighbor_report);
+        printf("\n");
+    } else
+        printf("Keeping the client here.\n");
     return kick;
 }
 
@@ -1247,7 +1269,6 @@ int ap_get_collision_count(int col_domain) {
 
     return ret_sta_count;
 }
-
 
 // TODO: Do we need to order this set?  Scan of randomly arranged elements is just
 // as quick if we're not using an optimised search.
