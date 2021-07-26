@@ -739,9 +739,9 @@ int kick_clients(ap* kicking_ap, uint32_t id) {
                 float rx_rate, tx_rate;
                 bool have_bandwidth_iwinfo = !(get_bandwidth_iwinfo(j->client_addr, &rx_rate, &tx_rate));
                 if (!have_bandwidth_iwinfo && dawn_metric.bandwidth_threshold > 0) {
-#ifndef DAWN_NO_OUTPUT
+//#ifndef DAWN_NO_OUTPUT
                     printf("No active transmission data for client. Don't kick!\n");
-#endif
+//#endif
                 }
                 else
                 {
@@ -749,19 +749,19 @@ int kick_clients(ap* kicking_ap, uint32_t id) {
                     // <= 6MBits <- probably no transmission
                     // tx_rate has always some weird value so don't use ist
                     if (have_bandwidth_iwinfo && rx_rate > dawn_metric.bandwidth_threshold) {
-#ifndef DAWN_NO_OUTPUT
+//#ifndef DAWN_NO_OUTPUT
                         printf("Client is probably in active transmisison. Don't kick! RxRate is: %f\n", rx_rate);
-#endif
+//#endif
                     }
                     else
                     {
-#ifndef DAWN_NO_OUTPUT
+//#ifndef DAWN_NO_OUTPUT
                         if (have_bandwidth_iwinfo)
                             printf("Client is probably NOT in active transmisison. KICK! RxRate is: %f\n", rx_rate);
                         else
                             printf("No active tranmission data for client, but bandwidth_threshold=%d means we don't care. KICK!\n",
                                    dawn_metric.bandwidth_threshold);
-#endif
+//#endif
 
                         // here we should send a messsage to set the probe.count for all aps to the min that there is no delay between switching
                         // the hearing map is full...

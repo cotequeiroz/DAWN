@@ -825,10 +825,10 @@ void ubus_send_beacon_report(client *c, ap *a, int id)
     blobmsg_add_u32(&b_beacon, "mode", mode);
     blobmsg_add_string(&b_beacon, "ssid", (char*)a->ssid);
 
-#ifndef DAWN_NO_OUTPUT
+//#ifndef DAWN_NO_OUTPUT
     printf("Invoking beacon report (addr=" MACSTR ", op_class=%d, channel=%d, duration=%d, mode=%d, ssid=%s)\n",
             MAC2STR(c->client_addr.u8), a->op_class, a->channel, dawn_metric.duration, mode, a->ssid);
-#endif
+//#endif
     ubus_invoke(ctx, id, "rrm_beacon_req", b_beacon.head, NULL, NULL, timeout * 1000);
 }
 
@@ -935,9 +935,9 @@ int wnm_disassoc_imminent(uint32_t id, const struct dawn_mac client_addr, struct
 
     void* nbs = blobmsg_open_array(&b, "neighbors");
     while(neighbor_list != NULL) {
-#ifndef DAWN_NO_OUTPUT
+//#ifndef DAWN_NO_OUTPUT
         printf("BSS TRANSITION NEIGHBOR " NR_MACSTR ", Score=%d\n", NR_MAC2STR(neighbor_list->nr), neighbor_list->score);
-#endif
+//#endif
         blobmsg_add_string(&b, NULL, neighbor_list->nr);
         neighbor_list = neighbor_list->next;
     }
@@ -1513,6 +1513,11 @@ int build_network_overview(struct blob_buf *b) {
     char ap_mac_buf[20];
     char client_mac_buf[20];
     struct hostapd_sock_entry *sub;
+
+#ifndef DAWN_NO_OUTPUT
+    printf("Building network overview\n");
+    print_probe_array();
+#endif
 
     blob_buf_init(b, 0);
 
