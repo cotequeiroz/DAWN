@@ -150,7 +150,7 @@ extern struct probe_metric_s dawn_metric;
 /*** Core DAWN data structures for tracking network devices and status ***/
 // Define this to remove printing / reporing of fields, and hence observe
 // which fields are evaluated in use at compile time.
-// #define DAWN_NO_OUTPUT
+#define DAWN_NO_OUTPUT
 
 // TODO notes:
 //    Never used? = No code reference
