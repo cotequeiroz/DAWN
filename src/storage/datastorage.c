@@ -408,7 +408,6 @@ void send_beacon_reports(ap *a, int id) {
 #endif
         if (i->rrm_enabled_capa & dawn_metric.rrm_mode_mask)
             ubus_send_beacon_report(i, a, id);
-
         i = i->next_entry_bc;
     }
 
@@ -457,25 +456,21 @@ int eval_probe_metric(struct probe_entry_s* probe_entry, ap* ap_entry) {
         score += ap_entry->ap_weight;
     }
 
+#ifndef DAWN_NO_OUTPUT
+    printf("Score=%4d: ", score);
+    print_probe_entry(probe_entry);
+#endif
+
     // TODO: This magic value never checked by caller.  What does it achieve?
     if (score < 0)
         score = -2; // -1 already used...
-
-#ifndef DAWN_NO_OUTPUT
-    printf("Score: %d of:\n", score);
-    print_probe_entry(probe_entry);
-#endif
 
     return score;
 }
 
 
 static int compare_station_count(ap* ap_entry_own, ap* ap_entry_to_compare, struct dawn_mac client_addr) {
-
-#ifndef DAWN_NO_OUTPUT
-    printf("Comparing own %d to %d\n", ap_entry_own->station_count, ap_entry_to_compare->station_count);
-#endif
-
+    int ret;
     int sta_count = ap_entry_own->station_count;
     int sta_count_to_compare = ap_entry_to_compare->station_count;
     if (is_connected(ap_entry_own->bssid_addr, client_addr)) {
@@ -485,16 +480,17 @@ static int compare_station_count(ap* ap_entry_own, ap* ap_entry_to_compare, stru
     if (is_connected(ap_entry_to_compare->bssid_addr, client_addr)) {
         sta_count_to_compare--;
     }
-#ifndef DAWN_NO_OUTPUT
-    printf("Comparing own station count %d to %d\n", sta_count, sta_count_to_compare);
-#endif
 
     if (sta_count - sta_count_to_compare > dawn_metric.max_station_diff)
-        return 1;
+        ret = 1;
     else if (sta_count_to_compare - sta_count > dawn_metric.max_station_diff)
-        return -1;
+        ret = -1;
     else
-        return 0;
+        ret = 0;
+#ifndef DAWN_NO_OUTPUT
+    printf("Comparing own station count %d to %d: Result: %d\n", sta_count, sta_count_to_compare, ret);
+#endif
+    return ret;
 }
 
 static struct kicking_nr *find_position(struct kicking_nr *nrlist, int score) {
@@ -558,7 +554,7 @@ int better_ap_available(ap *kicking_ap, struct dawn_mac client_mac, struct kicki
     int own_score = -1;
     if (own_probe != NULL && mac_is_equal_bb(own_probe->client_addr, client_mac) && mac_is_equal_bb(own_probe->bssid_addr, kicking_ap->bssid_addr)) {
 #ifndef DAWN_NO_OUTPUT
-        printf("Calculating own score!\n");
+        printf("Own   ");
 #endif
 
         own_score = eval_probe_metric(own_probe, kicking_ap);  //TODO: Should the -2 return be handled?
@@ -594,7 +590,7 @@ int better_ap_available(ap *kicking_ap, struct dawn_mac client_mac, struct kicki
         }
 
 #ifndef DAWN_NO_OUTPUT
-        printf("Calculating score to compare!\n");
+        printf("Other ");
 #endif
         int score_to_compare = eval_probe_metric(i, candidate_ap);
 

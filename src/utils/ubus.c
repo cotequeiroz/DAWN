@@ -816,14 +816,19 @@ static int get_mode_from_capability(int capability) {
 void ubus_send_beacon_report(client *c, ap *a, int id)
 {
     int timeout = 1;
+    int mode = get_mode_from_capability(c->rrm_enabled_capa);
     blob_buf_init(&b_beacon, 0);
     blobmsg_add_macaddr(&b_beacon, "addr", c->client_addr);
     blobmsg_add_u32(&b_beacon, "op_class", a->op_class);
     blobmsg_add_u32(&b_beacon, "channel", a->channel);
     blobmsg_add_u32(&b_beacon, "duration", dawn_metric.duration);
-    blobmsg_add_u32(&b_beacon, "mode", get_mode_from_capability(c->rrm_enabled_capa));
+    blobmsg_add_u32(&b_beacon, "mode", mode);
     blobmsg_add_string(&b_beacon, "ssid", (char*)a->ssid);
 
+#ifndef DAWN_NO_OUTPUT
+    printf("Invoking beacon report (addr=" MACSTR ", op_class=%d, channel=%d, duration=%d, mode=%d, ssid=%s)\n",
+            MAC2STR(c->client_addr.u8), a->op_class, a->channel, dawn_metric.duration, mode, a->ssid);
+#endif
     ubus_invoke(ctx, id, "rrm_beacon_req", b_beacon.head, NULL, NULL, timeout * 1000);
 }
 
